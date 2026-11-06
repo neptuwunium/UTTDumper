@@ -11,6 +11,7 @@
 #include <sstream>
 #include <fstream>
 #include <filesystem>
+#include <unordered_set>
 #include <nlohmann/json.hpp>
 
 namespace UTTD
@@ -153,11 +154,22 @@ namespace UTTD
 			InfoClass type = *classes[i];
 			InfoClass iter = type;
 
-			std::cout << std::format("[{0}] Child: {1}::{2}, {3}, {4}", typeCount, iter.nameSpace, iter.name, iter.module, iter.typeID) << std::endl;
+			std::cout << std::format("[{0}] Type Child: {1}::{2}, {3}, {4}", typeCount, iter.nameSpace, iter.name, iter.module, iter.typeID) << std::endl;
+
+			if (contains(m_engine.options().exclude, static_cast<uint32_t>(iter.typeID))) {
+				std::cout << std::format("[{0}] Type {1} is excluded, skipping...", typeCount, iter.name) << std::endl;
+				continue;
+			}
+
 			std::cout << std::format("[{0}] Getting base type...", typeCount) << std::endl;
 
 			std::string inheritance;
+			std::unordered_set<uint32_t> seenClasses;
 			while (true) {
+				if (!seenClasses.emplace(type.typeID).second) {
+					break;
+				}
+
 				inheritance += iter.name;
 
 				if (iter.base.empty()) {
@@ -174,7 +186,12 @@ namespace UTTD
 			os << std::format("\n// classID{{{0}}}: {1}\r\n", type.typeID, inheritance);
 			iter = type;
 
+			seenClasses.clear();
 			while (iter.isAbstract) {
+				if (!seenClasses.emplace(type.typeID).second) {
+					break;
+				}
+
 				os << std::format("// {0} is abstract\r\n", iter.name);
 
 				if (iter.base.empty()) {
@@ -219,12 +236,22 @@ namespace UTTD
 			std::shared_ptr<Unity::IRTTI> type = types[i];
 			std::shared_ptr<Unity::IRTTI> iter;
 
-			std::cout << std::format("[{0}] Child: {1}::{2}, {3}, {4}", typeCount, type->nameSpace(), type->name(), type->module(), type->typeID()) << std::endl;
-			std::cout << std::format("[{0}] Getting base type...", typeCount) << std::endl;
-
+			std::cout << std::format("[{0}] RTTI Child: {1}::{2}, {3}, {4}", typeCount, type->nameSpace(), type->name(), type->module(), type->typeID()) << std::endl;
 			iter.swap(type);
 
+			if (contains(m_engine.options().exclude, iter->typeID())) {
+				std::cout << std::format("[{0}] Type {1} is excluded, skipping...", typeCount, iter->name()) << std::endl;
+				continue;
+			}
+
+			std::cout << std::format("[{0}] Getting base type...", typeCount) << std::endl;
+
+			std::unordered_set<uint32_t> seenClasses;
 			while (iter->isAbstract()) {
+				if (!seenClasses.emplace(iter->typeID()).second) {
+					break;
+				}
+
 				std::shared_ptr<Unity::IRTTI> base = iter->base();
 
 				if (base.get() == nullptr) {
@@ -235,13 +262,6 @@ namespace UTTD
 			}
 
 			std::cout << std::format("[{0}] Base: {1}::{2}, {3}, {4}", typeCount, iter->nameSpace(), iter->name(), iter->module(), iter->typeID()) << std::endl;
-
-			if (iter->typeID() == 116) continue; // MonoManager
-			
-			if (contains(m_engine.options().exclude, iter->typeID())) {
-				std::cout << std::format("[{0}] Type {1} is excluded, skipping...", typeCount, iter->name()) << std::endl;
-				continue;
-			}
 
 			std::cout << std::format("[{0}] Producing native object...", typeCount) << std::endl;
 			std::shared_ptr<Unity::INativeObject> object = m_engine.nativeObject().produce(*iter, 0, Unity::CreationMode::Default);

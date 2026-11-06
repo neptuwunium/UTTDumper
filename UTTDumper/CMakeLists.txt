@@ -30,17 +30,8 @@ target_compile_definitions(UTTDumper PRIVATE TOML_EXCEPTIONS=1)
 
 include(FetchContent)
 
-FetchContent_Declare(
-	tomlplusplus
-	GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
-    GIT_TAG        v3.4.0
-)
-
-FetchContent_Declare(
-	nlohmann_json
-	GIT_REPOSITORY https://github.com/nlohmann/json.git
-    GIT_TAG        v3.11.3
-)
+FetchContent_Declare(tomlplusplus URL https://github.com/marzer/tomlplusplus/archive/refs/tags/v3.4.0.tar.gz DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
+FetchContent_Declare(nlohmann_json URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz DOWNLOAD_EXTRACT_TIMESTAMP TRUE)
 
 FetchContent_MakeAvailable(tomlplusplus)
 FetchContent_MakeAvailable(nlohmann_json)
@@ -55,8 +46,8 @@ if (ANDROID)
 endif()
 
 add_custom_command(
-	TARGET UTTDumper
-	COMMAND ${CMAKE_COMMAND} -E copy 
+	TARGET UTTDumper POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy
 	${CMAKE_CURRENT_SOURCE_DIR}/config.toml
 	$<TARGET_FILE_DIR:UTTDumper>
 )

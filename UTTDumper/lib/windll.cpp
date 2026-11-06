@@ -3,39 +3,26 @@
 #include <fstream>
 #include <iostream>
 
-static std::streambuf* CinBuffer, *CoutBuffer, *CerrBuffer;
-static std::fstream ConsoleInput, ConsoleOutput, ConsoleError;
+static std::streambuf *CoutBuffer, *CerrBuffer;
+static std::fstream ConsoleOutput, ConsoleError;
 
 static void RedirectIO() {
-    CinBuffer = std::cin.rdbuf();
     CoutBuffer = std::cout.rdbuf();
     CerrBuffer = std::cerr.rdbuf();
     
-    ConsoleInput.open("CONIN$", std::ios::in);
-    ConsoleOutput.open("CONOUT$", std::ios::out);
-    ConsoleError.open("CONOUT$", std::ios::out);
+    ConsoleOutput.open("UTT_O.txt", std::ios::out);
+    ConsoleError.open("UTT_E.txt", std::ios::out);
 
-    std::cin.rdbuf(ConsoleInput.rdbuf());
     std::cout.rdbuf(ConsoleOutput.rdbuf());
     std::cerr.rdbuf(ConsoleError.rdbuf());
 }
 
 static void ResetIO() {
-    ConsoleInput.close();
     ConsoleOutput.close();
     ConsoleError.close();
-
-    std::cin.rdbuf(CinBuffer);
-    std::cout.rdbuf(CoutBuffer);
-    std::cerr.rdbuf(CerrBuffer);
-
-    CinBuffer = nullptr;
-    CoutBuffer = nullptr;
-    CerrBuffer = nullptr;
 }
 
 static void StartWin(LPVOID hModule) {
-    AllocConsole();
     RedirectIO();
     {
         std::string path;
@@ -44,13 +31,9 @@ static void StartWin(LPVOID hModule) {
         path.resize(path_size);
 
         init(path);
-
-        std::cout << "Press any key to continue..." << std::endl;
-        std::cin.get();
     }
     ResetIO();
-    FreeConsole();
-    FreeLibraryAndExitThread(static_cast<HMODULE>(hModule), 0);
+    std::exit(0);
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved) {

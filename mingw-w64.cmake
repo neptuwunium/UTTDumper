@@ -1,0 +1,43 @@
+set(CMAKE_SYSTEM_NAME Windows)
+
+set(MINGW_TRIPLET "x86_64-w64-mingw32" CACHE STRING "MinGW target triplet")
+
+set(CMAKE_C_COMPILER   "${MINGW_TRIPLET}-gcc")
+set(CMAKE_CXX_COMPILER "${MINGW_TRIPLET}-g++")
+set(CMAKE_RC_COMPILER  "${MINGW_TRIPLET}-windres")
+
+set(CMAKE_AR      "${MINGW_TRIPLET}-ar")
+set(CMAKE_RANLIB  "${MINGW_TRIPLET}-ranlib")
+set(CMAKE_STRIP   "${MINGW_TRIPLET}-strip")
+set(CMAKE_OBJCOPY "${MINGW_TRIPLET}-objcopy")
+set(CMAKE_OBJDUMP "${MINGW_TRIPLET}-objdump")
+
+if(MINGW_TRIPLET STREQUAL "x86_64-w64-mingw32")
+    set(CMAKE_SYSTEM_PROCESSOR AMD64)
+elseif(MINGW_TRIPLET STREQUAL "i686-w64-mingw32")
+    set(CMAKE_SYSTEM_PROCESSOR x86)
+endif()
+
+set(CMAKE_FIND_ROOT_PATH "/usr/${MINGW_TRIPLET}")
+
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+
+set(CMAKE_CROSSCOMPILING_EMULATOR "wine")
+
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+
+set(CMAKE_EXE_LINKER_FLAGS_INIT
+    "-static -static-libgcc -static-libstdc++"
+)
+
+set(CMAKE_SHARED_LINKER_FLAGS_INIT
+    "-static-libgcc -static-libstdc++"
+)
+
+set(CMAKE_MODULE_LINKER_FLAGS_INIT
+    "-static-libgcc -static-libstdc++ -Wl,-Bstatic -lwinpthread -Wl,-Bdynamic"
+)
